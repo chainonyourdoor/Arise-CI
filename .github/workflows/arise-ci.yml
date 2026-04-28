@@ -3,10 +3,20 @@ name: "Veilkernel-Arise🔥"
 on:
   workflow_dispatch:
     inputs:
-      FORCE_UPDATE:
-        description: "Force update all sources"
-        type: boolean
-        default: false
+      FORCE_UPDATE_INFRA:
+        description: "Force update infra (Clang, Kernel, AK3, APT)"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
+      FORCE_UPDATE_KSU:
+        description: "Force update KSU + SUSFS sources"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
       BUILD_VANILLA:
         description: "Vanilla"
         type: boolean
@@ -34,9 +44,9 @@ jobs:
         id: set-matrix
         run: |
           variants=()
-          [[ "${{ inputs.BUILD_VANILLA }}" == "true" ]] && variants+=("VANILLA")
-          [[ "${{ inputs.BUILD_KSUNEXT }}" == "true" ]] && variants+=("KSUNEXT-SUSFS")
-          [[ "${{ inputs.BUILD_RESUKISU }}" == "true" ]] && variants+=("RESUKISU-SUSFS")
+          [[ "${{ inputs.BUILD_VANILLA }}"   == "true" ]] && variants+=("VANILLA")
+          [[ "${{ inputs.BUILD_KSUNEXT }}"   == "true" ]] && variants+=("KSUNEXT-SUSFS")
+          [[ "${{ inputs.BUILD_RESUKISU }}"  == "true" ]] && variants+=("RESUKISU-SUSFS")
           JSON=$(printf '%s\n' "${variants[@]}" | jq -R . | jq -sc .)
           echo "matrix=$JSON" >> $GITHUB_OUTPUT
 
@@ -57,7 +67,6 @@ jobs:
       TG_LOG_BOT_TOKEN: ${{ secrets.TG_LOG_BOT_TOKEN }}
       TG_LOG_CHAT_ID:   ${{ secrets.TG_LOG_CHAT_ID }}
       VARIANT:          ${{ matrix.variant }}
-      FORCE_UPDATE:     ${{ github.event.inputs.FORCE_UPDATE }}
       CCACHE_DIR:       ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE:   "5G"
 
@@ -78,7 +87,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/ccache-bin
-          key: ccache-ecs-bin-${{ github.run_id }}
+          key: ccache-ecs-bin-v1
           restore-keys: ccache-ecs-bin-
 
       - name: "♻️ Restore ccache data"
@@ -88,8 +97,16 @@ jobs:
           key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}
           restore-keys: ccache-data-${{ matrix.variant }}-
 
-      - name: "♻️ Restore clang cache"
-        if: inputs.FORCE_UPDATE != 'true'
+      - name: "♻️ Restore apt cache"
+        if: inputs.FORCE_UPDATE_INFRA != 'yes'
+        uses: actions/cache@v4
+        with:
+          path: ~/.apt-cache
+          key: apt-deps-ubuntu-24-v1
+          restore-keys: apt-deps-ubuntu-24-
+
+      - name: "♻️ Restore Clang cache"
+        if: inputs.FORCE_UPDATE_INFRA != 'yes'
         uses: actions/cache@v4
         with:
           path: ~/clang-cache
@@ -97,7 +114,7 @@ jobs:
           restore-keys: clang-greenforce-
 
       - name: "♻️ Restore kernel source cache"
-        if: inputs.FORCE_UPDATE != 'true'
+        if: inputs.FORCE_UPDATE_INFRA != 'yes'
         uses: actions/cache@v4
         with:
           path: ~/kernel-cache
@@ -105,22 +122,28 @@ jobs:
           restore-keys: kernel-source-${{ github.ref_name }}-
 
       - name: "♻️ Restore AnyKernel3 cache"
-        if: inputs.FORCE_UPDATE != 'true'
+        if: inputs.FORCE_UPDATE_INFRA != 'yes'
         uses: actions/cache@v4
         with:
           path: ~/ak3-cache
           key: ak3-veilak3-v1
           restore-keys: ak3-veilak3-
 
-      - name: "♻️ Restore apt cache"
+      - name: "♻️ Restore KSU + SUSFS cache"
+        if: |
+          inputs.FORCE_UPDATE_KSU != 'yes' &&
+          matrix.variant != 'VANILLA'
         uses: actions/cache@v4
         with:
-          path: ~/.apt-cache
-          key: apt-deps-ubuntu-24
+          path: |
+            ~/ksu-cache
+            ~/susfs-cache
+          key: ksu-susfs-${{ matrix.variant }}-v1
+          restore-keys: ksu-susfs-${{ matrix.variant }}-
 
       - name: "📦 Install Dependencies"
         run: |
-          if [ -d ~/.apt-cache ]; then
+          if [ -d ~/.apt-cache ] && [ "${{ inputs.FORCE_UPDATE_INFRA }}" != "yes" ]; then
             sudo cp -rn ~/.apt-cache/. /var/cache/apt/archives/ 2>/dev/null || true
           fi
           sudo apt-get update -qq
@@ -133,9 +156,10 @@ jobs:
       - name: "🔨 Build [${{ matrix.variant }}]"
         env:
           GIT_CLONE_PROTECTION_ACTIVE: false
-          USE_CLANG_CACHE:  ${{ inputs.FORCE_UPDATE != 'true' }}
-          USE_KERNEL_CACHE: ${{ inputs.FORCE_UPDATE != 'true' }}
-          USE_AK3_CACHE:    ${{ inputs.FORCE_UPDATE != 'true' }}
+          USE_CLANG_CACHE:  ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
+          USE_KERNEL_CACHE: ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
+          USE_AK3_CACHE:    ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
+          USE_KSU_CACHE:    ${{ inputs.FORCE_UPDATE_KSU != 'yes' }}
         run: bash build.sh
 
       - name: "📊 Ccache stats"
