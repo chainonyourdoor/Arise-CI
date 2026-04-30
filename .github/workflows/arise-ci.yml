@@ -94,8 +94,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}
-          restore-keys: ccache-data-${{ matrix.variant }}-
+          key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-v1
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-
 
       - name: "♻️ Restore apt cache"
         if: inputs.FORCE_UPDATE_INFRA != 'yes'
@@ -149,7 +149,7 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends \
             bc bison flex libssl-dev libelf-dev \
-            dwarves cpio git curl wget zip patch
+            dwarves cpio git curl wget zip patch rsync
           mkdir -p ~/.apt-cache
           sudo cp /var/cache/apt/archives/*.deb ~/.apt-cache/ 2>/dev/null || true
 
@@ -160,6 +160,7 @@ jobs:
           USE_KERNEL_CACHE: ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
           USE_AK3_CACHE:    ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
           USE_KSU_CACHE:    ${{ inputs.FORCE_UPDATE_KSU != 'yes' }}
+          CCACHE_IS_KERNEL_COMPILING: "true"
         run: bash build.sh
 
       - name: "📊 Ccache stats"
