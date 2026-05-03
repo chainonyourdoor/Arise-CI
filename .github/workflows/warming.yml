@@ -34,7 +34,7 @@ jobs:
 
   warm:
     needs: setup
-    name: "🔥 Warm [${{ matrix.variant }}]"
+    name: "🔥 Warm ${{ matrix.variant }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -121,7 +121,7 @@ jobs:
             binutils-aarch64-linux-gnu python3 rsync zip \
             cmake ninja-build g++ libzstd-dev > /dev/null 2>&1
 
-      - name: "🔥 Warm [${{ matrix.variant }}]"
+      - name: "🔥 Warm ${{ matrix.variant }}"
         env:
           USE_CLANG_CACHE:  "true"
           USE_KERNEL_CACHE: "true"
