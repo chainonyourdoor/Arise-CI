@@ -136,10 +136,10 @@ jobs:
         if: always()
         run: |
           MISSES=0
-          if [ -f "${GITHUB_WORKSPACE}/ccache-bin/ccache" ]; then
-            ${GITHUB_WORKSPACE}/ccache-bin/ccache --show-stats
-            MISSES=$(${GITHUB_WORKSPACE}/ccache-bin/ccache --show-stats \
-              | grep "^  Misses:" | awk '{print $2}')
+          if [ -f "$HOME/ccache-bin/ccache" ]; then
+            $HOME/ccache-bin/ccache --show-stats
+            MISSES=$($HOME/ccache-bin/ccache --show-stats \
+              | grep "Misses:" | awk '{sum+=$2} END{print sum+0}')
           fi
           echo "misses=${MISSES}" >> $GITHUB_OUTPUT
 
