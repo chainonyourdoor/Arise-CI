@@ -1,29 +1,8 @@
-name: "Veilkernel-Arise🔥"
+name: "⚡Veilkernel-Arise"
 
 on:
   workflow_dispatch:
     inputs:
-      FORCE_UPDATE_INFRA:
-        description: "Force update infra (Clang, Kernel, AK3, APT)"
-        type: choice
-        default: "no"
-        options:
-          - "yes"
-          - "no"
-      FORCE_UPDATE_KSU:
-        description: "Force update KSU + SUSFS sources"
-        type: choice
-        default: "no"
-        options:
-          - "yes"
-          - "no"
-      ENABLE_LTO:
-        description: "Enable Full LTO — better kernel performance but build takes ~15-20min"
-        type: choice
-        default: "no"
-        options:
-          - "no"
-          - "yes"
       BUILD_VANILLA:
         description: "Vanilla"
         type: boolean
@@ -36,6 +15,27 @@ on:
         description: "RESUKISU-SUSFS"
         type: boolean
         default: false
+      FORCE_UPDATE_INFRA:
+        description: "Force Update (Clang, Kernel, AK3, APT)"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
+      FORCE_UPDATE_KSU:
+        description: "Force Update KSU + SUSFS sources"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
+      ENABLE_LTO:
+        description: "Enable Full LTO — ⚠️ slow build time"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -60,7 +60,7 @@ jobs:
   build:
     needs: setup
     if: needs.setup.outputs.matrix != '[]'
-    name: "🛠️ Build [${{ matrix.variant }}]"
+    name: "🔥 Build ${{ matrix.variant }}"
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -79,13 +79,13 @@ jobs:
 
     steps:
 
-      - name: "📥 Clone Veilkernel-Arise"
+      - name: "🌀 Clone Veilkernel-Arise"
         run: |
           git clone --depth=1 \
             "https://x-access-token:${PERSONAL_TOKEN}@github.com/chainonyourdoor/Veilkernel-Arise" \
             .
 
-      - name: "💾 Setup Swap Space"
+      - name: "🧰 Setup Swap Space"
         uses: thejerrybao/setup-swap-space@v1
         with:
           swap-size-gb: 12
@@ -160,7 +160,7 @@ jobs:
           mkdir -p ~/.apt-cache
           sudo cp /var/cache/apt/archives/*.deb ~/.apt-cache/ 2>/dev/null || true
 
-      - name: "🔨 Build [${{ matrix.variant }}]"
+      - name: "⚡ Build ${{ matrix.variant }}"
         env:
           GIT_CLONE_PROTECTION_ACTIVE: false
           USE_CLANG_CACHE:  ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
