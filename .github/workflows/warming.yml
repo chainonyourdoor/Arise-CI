@@ -12,6 +12,10 @@ on:
           - "VANILLA"
           - "KSUNEXT-SUSFS"
           - "RESUKISU-SUSFS"
+      ENABLE_LTO:
+        description: "Enable Full LTO"
+        type: boolean
+        default: false
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -70,8 +74,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-
+          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-
 
       - name: "♻️ Restore apt cache"
         uses: actions/cache/restore@v4
@@ -129,6 +133,7 @@ jobs:
           USE_KSU_CACHE:    "true"
           CCACHE_IS_KERNEL_COMPILING: "true"
           WARMING_MODE:     "true"
+          ENABLE_LTO:       ${{ inputs.ENABLE_LTO == true && 'yes' || 'no' }}
         run: bash build.sh
 
       - name: "📊 Ccache stats"
@@ -148,7 +153,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          PREFIX="ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-"
+          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-"
           CURRENT_KEY="${PREFIX}${{ github.run_id }}"
           CACHES=$(gh api \
             "/repos/${{ github.repository }}/actions/caches?per_page=100" \
@@ -167,7 +172,8 @@ jobs:
           gh workflow run warming.yml \
             -R chainonyourdoor/Arise-CI \
             --ref ${{ github.ref_name }} \
-            --field VARIANTS=${{ matrix.variant }}
+            --field VARIANTS=${{ matrix.variant }} \
+            --field ENABLE_LTO=${{ inputs.ENABLE_LTO }}
 
       - name: "📣 Notify Telegram"
         if: steps.stats.outputs.misses == '0'
