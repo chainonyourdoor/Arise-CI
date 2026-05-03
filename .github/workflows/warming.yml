@@ -165,6 +165,7 @@ jobs:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
           gh workflow run warming.yml \
+            -R chainonyourdoor/Arise-CI \
             --ref ${{ github.ref_name }} \
             --field VARIANTS=${{ matrix.variant }}
 
