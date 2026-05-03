@@ -55,7 +55,7 @@ jobs:
             .
 
       - name: "💾 Setup Swap Space"
-        uses: pierotofy/setup-swap-space@master
+        uses: thejerrybao/setup-swap-space@v1
         with:
           swap-size-gb: 12
 
