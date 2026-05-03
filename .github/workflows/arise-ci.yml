@@ -101,8 +101,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-
+          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-
 
       - name: "♻️ Restore apt cache"
         if: inputs.FORCE_UPDATE_INFRA != 'yes'
@@ -182,7 +182,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          PREFIX="ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-"
+          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-"
           CURRENT_KEY="${PREFIX}${{ github.run_id }}"
           CACHES=$(gh api \
             "/repos/${{ github.repository }}/actions/caches?per_page=100" \
