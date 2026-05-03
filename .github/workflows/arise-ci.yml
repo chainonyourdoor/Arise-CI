@@ -17,6 +17,13 @@ on:
         options:
           - "yes"
           - "no"
+      ENABLE_LTO:
+        description: "Enable Full LTO — better kernel performance but build takes ~15-20min"
+        type: choice
+        default: "no"
+        options:
+          - "no"
+          - "yes"
       BUILD_VANILLA:
         description: "Vanilla"
         type: boolean
@@ -161,6 +168,7 @@ jobs:
           USE_AK3_CACHE:    ${{ inputs.FORCE_UPDATE_INFRA != 'yes' }}
           USE_KSU_CACHE:    ${{ inputs.FORCE_UPDATE_KSU != 'yes' }}
           CCACHE_IS_KERNEL_COMPILING: "true"
+          ENABLE_LTO:       ${{ inputs.ENABLE_LTO }}
         run: bash build.sh
 
       - name: "📊 Ccache stats"
