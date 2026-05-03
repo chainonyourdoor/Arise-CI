@@ -1,0 +1,177 @@
+name: "🔥 Cache Warming"
+
+on:
+  workflow_dispatch:
+    inputs:
+      VARIANTS:
+        description: "Variants to warm"
+        type: choice
+        default: "all"
+        options:
+          - "all"
+          - "VANILLA"
+          - "KSUNEXT-SUSFS"
+          - "RESUKISU-SUSFS"
+
+env:
+  DEBIAN_FRONTEND: noninteractive
+
+jobs:
+
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: "🎯 Set Warming Matrix"
+        id: set-matrix
+        run: |
+          if [ "${{ inputs.VARIANTS }}" = "all" ]; then
+            echo 'matrix=["VANILLA","KSUNEXT-SUSFS","RESUKISU-SUSFS"]' >> $GITHUB_OUTPUT
+          else
+            echo "matrix=[\"${{ inputs.VARIANTS }}\"]" >> $GITHUB_OUTPUT
+          fi
+
+  warm:
+    needs: setup
+    name: "🔥 Warm [${{ matrix.variant }}]"
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        variant: ${{ fromJson(needs.setup.outputs.matrix) }}
+      fail-fast: false
+
+    env:
+      CCACHE_DIR:     ${{ github.workspace }}/.ccache
+      CCACHE_MAXSIZE: "5G"
+      VARIANT:        ${{ matrix.variant }}
+
+    steps:
+
+      - name: "🌀 Clone Veilkernel-Arise"
+        run: |
+          git clone --depth=1 \
+            "https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/chainonyourdoor/Veilkernel-Arise" \
+            .
+
+      - name: "💾 Setup Swap Space"
+        uses: pierotofy/setup-swap-space@master
+        with:
+          swap-size-gb: 12
+
+      - name: "♻️ Restore ccache binary"
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/ccache-bin
+          key: ccache-ecs-bin-v1
+          restore-keys: ccache-ecs-bin-
+
+      - name: "♻️ Restore ccache data"
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.ccache
+          key: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-
+
+      - name: "♻️ Restore apt cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.apt-cache
+          key: apt-deps-ubuntu-24-v1
+          restore-keys: apt-deps-ubuntu-24-
+
+      - name: "♻️ Restore Clang cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/clang-cache
+          key: clang-greenforce-v1
+          restore-keys: clang-greenforce-
+
+      - name: "♻️ Restore kernel source cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/kernel-cache
+          key: kernel-source-${{ github.ref_name }}-v1
+          restore-keys: kernel-source-${{ github.ref_name }}-
+
+      - name: "♻️ Restore AnyKernel3 cache"
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/ak3-cache
+          key: ak3-veilak3-v1
+          restore-keys: ak3-veilak3-
+
+      - name: "♻️ Restore KSU + SUSFS cache"
+        if: matrix.variant != 'VANILLA'
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/ksu-cache
+            ~/susfs-cache
+          key: ksu-susfs-${{ matrix.variant }}-v1
+          restore-keys: ksu-susfs-${{ matrix.variant }}-
+
+      - name: "📦 Install Dependencies"
+        run: |
+          if [ -d ~/.apt-cache ] && [ "true" = "true" ]; then
+            sudo cp -rp ~/.apt-cache/archives /var/cache/apt/
+          fi
+          sudo apt-get install -y --no-install-recommends \
+            git make bc bison flex libssl-dev libelf-dev \
+            binutils-aarch64-linux-gnu python3 rsync zip \
+            cmake ninja-build g++ libzstd-dev > /dev/null 2>&1
+
+      - name: "🔥 Warm [${{ matrix.variant }}]"
+        env:
+          USE_CLANG_CACHE:  "true"
+          USE_KERNEL_CACHE: "true"
+          USE_AK3_CACHE:    "true"
+          USE_KSU_CACHE:    "true"
+          CCACHE_IS_KERNEL_COMPILING: "true"
+          WARMING_MODE:     "true"
+        run: bash build.sh
+
+      - name: "📊 Ccache stats"
+        id: stats
+        if: always()
+        run: |
+          MISSES=0
+          if [ -f "${GITHUB_WORKSPACE}/ccache-bin/ccache" ]; then
+            ${GITHUB_WORKSPACE}/ccache-bin/ccache --show-stats
+            MISSES=$(${GITHUB_WORKSPACE}/ccache-bin/ccache --show-stats \
+              | grep "^  Misses:" | awk '{print $2}')
+          fi
+          echo "misses=${MISSES}" >> $GITHUB_OUTPUT
+
+      - name: "🧹 Cleanup old ccache data"
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          PREFIX="ccache-data-${{ matrix.variant }}-${{ github.ref_name }}-"
+          CURRENT_KEY="${PREFIX}${{ github.run_id }}"
+          CACHES=$(gh api \
+            "/repos/${{ github.repository }}/actions/caches?per_page=100" \
+            --jq ".actions_caches[] | select(.key | startswith(\"${PREFIX}\")) | select(.key != \"${CURRENT_KEY}\") | .id")
+          if [ -n "$CACHES" ]; then
+            for ID in $CACHES; do
+              gh api --method DELETE "/repos/${{ github.repository }}/actions/caches/${ID}" || true
+            done
+          fi
+
+      - name: "🔁 Re-trigger if not fully warmed"
+        if: steps.stats.outputs.misses != '0'
+        env:
+          GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
+        run: |
+          gh workflow run warming.yml \
+            --ref ${{ github.ref_name }} \
+            --field VARIANTS=${{ matrix.variant }}
+
+      - name: "📣 Notify Telegram"
+        if: steps.stats.outputs.misses == '0'
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d text="✅ Cache fully warmed%0A%0AVariant: ${{ matrix.variant }}%0ABranch: ${{ github.ref_name }}%0AHit rate: 100%%" \
+            -d parse_mode="HTML"
