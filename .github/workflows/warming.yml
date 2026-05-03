@@ -113,8 +113,8 @@ jobs:
 
       - name: "📦 Install Dependencies"
         run: |
-          if [ -d ~/.apt-cache ] && [ "true" = "true" ]; then
-            sudo cp -rp ~/.apt-cache/archives /var/cache/apt/
+          if [ -d ~/.apt-cache ]; then
+            sudo cp -rn ~/.apt-cache/. /var/cache/apt/archives/ 2>/dev/null || true
           fi
           sudo apt-get install -y --no-install-recommends \
             git make bc bison flex libssl-dev libelf-dev \
