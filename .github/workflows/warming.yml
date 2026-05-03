@@ -117,9 +117,8 @@ jobs:
             sudo cp -rn ~/.apt-cache/. /var/cache/apt/archives/ 2>/dev/null || true
           fi
           sudo apt-get install -y --no-install-recommends \
-            git make bc bison flex libssl-dev libelf-dev \
-            binutils-aarch64-linux-gnu python3 rsync zip \
-            cmake ninja-build g++ libzstd-dev > /dev/null 2>&1
+            bc bison flex libssl-dev libelf-dev \
+            dwarves cpio git curl wget zip patch rsync > /dev/null 2>&1
 
       - name: "🔥 Warm ${{ matrix.variant }}"
         env:
