@@ -30,7 +30,7 @@ on:
           - "yes"
           - "no"
       ENABLE_LTO:
-        description: "Enable Full LTO — ⚠️ slow build time"
+        description: "Enable Thin LTO — ⚠️ slow build time"
         type: choice
         default: "no"
         options:
