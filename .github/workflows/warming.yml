@@ -13,7 +13,7 @@ on:
           - "KSUNEXT-SUSFS"
           - "RESUKISU-SUSFS"
       ENABLE_LTO:
-        description: "Enable Full LTO"
+        description: "Enable Thin LTO"
         type: boolean
         default: false
 
@@ -58,7 +58,7 @@ jobs:
             "https://x-access-token:${{ secrets.PERSONAL_TOKEN }}@github.com/chainonyourdoor/Veilkernel-Arise" \
             .
 
-      - name: "💾 Setup Swap Space"
+      - name: "🧰 Setup Swap Space"
         uses: thejerrybao/setup-swap-space@v1
         with:
           swap-size-gb: 12
@@ -180,5 +180,5 @@ jobs:
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
             -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
-            -d text="✅ Cache fully warmed%0A%0AVariant: ${{ matrix.variant }}%0ABranch: ${{ github.ref_name }}%0AHit rate: 100%%" \
+            -d text="🔥 Cache Fully Warmed 🔥%0A%0AVariant: ${{ matrix.variant }}%0AHit rate: 100%" \
             -d parse_mode="HTML"
