@@ -13,9 +13,12 @@ on:
           - "KSUNEXT-SUSFS"
           - "RESUKISU-SUSFS"
       ENABLE_LTO:
-        description: "Enable Thin LTO"
-        type: boolean
-        default: false
+        description: "Enable Thin LTO — ⚠️ slow build time"
+        type: choice
+        default: "no"
+        options:
+          - "yes"
+          - "no"
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -74,8 +77,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-
+          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-
 
       - name: "♻️ Restore apt cache"
         uses: actions/cache/restore@v4
@@ -133,7 +136,7 @@ jobs:
           USE_KSU_CACHE:    "true"
           CCACHE_IS_KERNEL_COMPILING: "true"
           WARMING_MODE:     "true"
-          ENABLE_LTO:       ${{ inputs.ENABLE_LTO == true && 'yes' || 'no' }}
+          ENABLE_LTO:       ${{ inputs.ENABLE_LTO }}
         run: bash build.sh
 
       - name: "📊 Ccache stats"
@@ -153,7 +156,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == true && 'lto-' || '' }}${{ github.ref_name }}-"
+          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-"
           CURRENT_KEY="${PREFIX}${{ github.run_id }}"
           CACHES=$(gh api \
             "/repos/${{ github.repository }}/actions/caches?per_page=100" \
