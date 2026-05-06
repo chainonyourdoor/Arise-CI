@@ -13,12 +13,12 @@ on:
           - "KSUNEXT-SUSFS"
           - "RESUKISU-SUSFS"
       ENABLE_LTO:
-        description: "Enable Thin LTO — ⚠️ slow build time"
+        description: "⚠️ Enable LTO"
         type: choice
-        default: "no"
+        default: "NONE"
         options:
-          - "yes"
-          - "no"
+          - "NONE"
+          - "THIN"
 
 env:
   DEBIAN_FRONTEND: noninteractive
@@ -77,8 +77,8 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.ccache
-          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
-          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-
+          key: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'THIN' && 'lto-' || '' }}${{ github.ref_name }}-${{ github.run_id }}
+          restore-keys: ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'THIN' && 'lto-' || '' }}${{ github.ref_name }}-
 
       - name: "♻️ Restore apt cache"
         uses: actions/cache/restore@v4
@@ -156,7 +156,7 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PERSONAL_TOKEN }}
         run: |
-          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'yes' && 'lto-' || '' }}${{ github.ref_name }}-"
+          PREFIX="ccache-data-${{ matrix.variant }}-${{ inputs.ENABLE_LTO == 'THIN' && 'lto-' || '' }}${{ github.ref_name }}-"
           CURRENT_KEY="${PREFIX}${{ github.run_id }}"
           CACHES=$(gh api \
             "/repos/${{ github.repository }}/actions/caches?per_page=100" \
@@ -186,7 +186,7 @@ jobs:
           TELEGRAM_THREAD_ID_CACHE: ${{ secrets.TELEGRAM_THREAD_ID_CACHE }}
         run: |
           LTO_LABEL="None"
-          [ "${{ inputs.ENABLE_LTO }}" = "yes" ] && LTO_LABEL="Thin"
+          [ "${{ inputs.ENABLE_LTO }}" = "THIN" ] && LTO_LABEL="Thin"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             ${TELEGRAM_THREAD_ID_CACHE:+-d message_thread_id="${TELEGRAM_THREAD_ID_CACHE}"} \
