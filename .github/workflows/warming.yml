@@ -185,8 +185,10 @@ jobs:
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
           TELEGRAM_THREAD_ID_CACHE: ${{ secrets.TELEGRAM_THREAD_ID_CACHE }}
         run: |
+          LTO_LABEL="None"
+          [ "${{ inputs.ENABLE_LTO }}" = "yes" ] && LTO_LABEL="Thin"
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d chat_id="${TELEGRAM_CHAT_ID}" \
             ${TELEGRAM_THREAD_ID_CACHE:+-d message_thread_id="${TELEGRAM_THREAD_ID_CACHE}"} \
-            -d text="🔥 Cache Fully Warmed 🔥%0A%0AVariant: ${{ matrix.variant }}%0AHit rate: 100%" \
+            -d text="🔥 Cache Fully Warmed 🔥%0A%0AVariant: ${{ matrix.variant }}%0ALTO: ${LTO_LABEL}%0AHit rate: 100%" \
             -d parse_mode="HTML"
