@@ -180,8 +180,13 @@ jobs:
 
       - name: "📣 Notify Telegram"
         if: steps.stats.outputs.misses == '0'
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TELEGRAM_THREAD_ID_CACHE: ${{ secrets.TELEGRAM_THREAD_ID_CACHE }}
         run: |
-          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_SEND_BUILD_CHAT_ID }}" \
+          curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
+            -d chat_id="${TELEGRAM_CHAT_ID}" \
+            ${TELEGRAM_THREAD_ID_CACHE:+-d message_thread_id="${TELEGRAM_THREAD_ID_CACHE}"} \
             -d text="🔥 Cache Fully Warmed 🔥%0A%0AVariant: ${{ matrix.variant }}%0AHit rate: 100%" \
             -d parse_mode="HTML"
