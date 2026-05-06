@@ -1,4 +1,4 @@
-name: "⚡Veilkernel-Arise"
+name: "⚡ Veilkernel-Arise"
 
 on:
   workflow_dispatch:
