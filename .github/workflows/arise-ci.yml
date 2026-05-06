@@ -70,8 +70,7 @@ jobs:
     env:
       PERSONAL_TOKEN:            ${{ secrets.PERSONAL_TOKEN }}
       TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
-      TELEGRAM_SEND_BUILD_CHAT_ID: ${{ secrets.TELEGRAM_SEND_BUILD_CHAT_ID }}
-      TELEGRAM_SEND_LOG_CHAT_ID:   ${{ secrets.TELEGRAM_SEND_LOG_CHAT_ID }}
+      TELEGRAM_CHAT_ID:          ${{ secrets.TELEGRAM_CHAT_ID }}
       TELEGRAM_THREAD_ID_BUILD:    ${{ secrets.TELEGRAM_THREAD_ID_BUILD }}
       TELEGRAM_THREAD_ID_LOG:      ${{ secrets.TELEGRAM_THREAD_ID_LOG }}
       VARIANT:          ${{ matrix.variant }}
