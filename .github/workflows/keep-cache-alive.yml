@@ -30,26 +30,16 @@ jobs:
 
     steps:
 
-      - name: "♻️ Touch ccache binary"
+      - name: "♻️ Touch arsenal cache"
         uses: actions/cache/restore@v4
         with:
-          path: ~/ccache-bin
-          key: ccache-ecs-bin-__keepalive__
-          restore-keys: ccache-ecs-bin-
-
-      - name: "♻️ Touch apt cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/.apt-cache
-          key: apt-deps-ubuntu-24-__keepalive__
-          restore-keys: apt-deps-ubuntu-24-
-
-      - name: "♻️ Touch Clang cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/clang-cache
-          key: clang-greenforce-__keepalive__
-          restore-keys: clang-greenforce-
+          path: |
+            ~/ccache-bin
+            ~/.apt-cache
+            ~/clang-cache
+            ~/ak3-cache
+          key: arsenal-__keepalive__
+          restore-keys: arsenal-
 
       - name: "♻️ Touch kernel source cache"
         uses: actions/cache/restore@v4
@@ -57,13 +47,6 @@ jobs:
           path: ~/kernel-cache
           key: kernel-source-${{ github.ref_name }}-__keepalive__
           restore-keys: kernel-source-${{ github.ref_name }}-
-
-      - name: "♻️ Touch AnyKernel3 cache"
-        uses: actions/cache/restore@v4
-        with:
-          path: ~/ak3-cache
-          key: ak3-veilak3-__keepalive__
-          restore-keys: ak3-veilak3-
 
       - name: "♻️ Touch KSU + SUSFS (KSUNEXT)"
         uses: actions/cache/restore@v4
