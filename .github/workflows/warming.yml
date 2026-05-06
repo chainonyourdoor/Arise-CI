@@ -159,8 +159,9 @@ jobs:
           cleanup_cache "kernel-source-${{ github.ref_name }}-" "kernel-source-${{ github.ref_name }}-${{ github.run_id }}"
           cleanup_cache "ccache-data-${{ matrix.variant }}-${LTO_PREFIX}${{ github.ref_name }}-" \
             "ccache-data-${{ matrix.variant }}-${LTO_PREFIX}${{ github.ref_name }}-${{ github.run_id }}"
-          [[ "${{ matrix.variant }}" != "VANILLA" ]] && \
+          if [[ "${{ matrix.variant }}" != "VANILLA" ]]; then
             cleanup_cache "ksu-susfs-${{ matrix.variant }}-" "ksu-susfs-${{ matrix.variant }}-${{ github.run_id }}"
+          fi
 
       - name: "🔁 Re-trigger if not fully warmed"
         if: steps.stats.outputs.misses != '0'
