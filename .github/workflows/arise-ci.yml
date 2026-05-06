@@ -68,11 +68,10 @@ jobs:
       fail-fast: false
 
     env:
-      PERSONAL_TOKEN:   ${{ secrets.PERSONAL_TOKEN }}
-      TG_BOT_TOKEN:     ${{ secrets.TG_BOT_TOKEN }}
-      TG_CHAT_ID:       ${{ secrets.TG_CHAT_ID }}
-      TG_LOG_BOT_TOKEN: ${{ secrets.TG_LOG_BOT_TOKEN }}
-      TG_LOG_CHAT_ID:   ${{ secrets.TG_LOG_CHAT_ID }}
+      PERSONAL_TOKEN:            ${{ secrets.PERSONAL_TOKEN }}
+      TELEGRAM_BOT_TOKEN:        ${{ secrets.TELEGRAM_BOT_TOKEN }}
+      TELEGRAM_SEND_BUILD_CHAT_ID: ${{ secrets.TELEGRAM_SEND_BUILD_CHAT_ID }}
+      TELEGRAM_SEND_LOG_CHAT_ID:   ${{ secrets.TELEGRAM_SEND_LOG_CHAT_ID }}
       VARIANT:          ${{ matrix.variant }}
       CCACHE_DIR:       ${{ github.workspace }}/.ccache
       CCACHE_MAXSIZE:   "5G"

@@ -179,6 +179,6 @@ jobs:
         if: steps.stats.outputs.misses == '0'
         run: |
           curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
-            -d chat_id="${{ secrets.TELEGRAM_CHAT_ID }}" \
+            -d chat_id="${{ secrets.TELEGRAM_SEND_BUILD_CHAT_ID }}" \
             -d text="🔥 Cache Fully Warmed 🔥%0A%0AVariant: ${{ matrix.variant }}%0AHit rate: 100%" \
             -d parse_mode="HTML"
